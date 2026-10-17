@@ -24,7 +24,7 @@ When you type `/opencode <instruction>` in Claude Code, this skill:
 
 ## Prerequisites
 
-- [OpenCode CLI](https://opencode.ai) installed (`opencode --version`)
+- [OpenCode CLI](https://opencode.ai) v1 or v2 installed (`opencode --version`; the free tier needs ≥1.18.0)
 - [Claude Code](https://claude.ai/code) with skills enabled
 - `python3` available (for the streaming parser and syntax checks)
 - GNU `timeout` available — on macOS: `brew install coreutils`
@@ -137,7 +137,9 @@ Claude Code
             └─ ~/tools/opencode-delegate <workdir> <prompt> [timeout] [model]
                  ├─ writes prompt to temp file (avoids shell injection)
                  ├─ runs: opencode run <prompt> --format json
-                 │   --auto --model <model>  (run from inside <workdir>)
+                 │   --model <model> + version-specific flags (run from inside <workdir>)
+                 │   └─ --dangerously-skip-permissions (v1 ≤1.15) or --auto (v1.19+, v2),
+                 │      plus --dir <workdir> when supported (detected from `opencode run --help`)
                  │   └─ no pseudo-TTY needed (unlike Vibe)
                  ├─ pipes JSON events through Python parser
                  │   └─ handles: step_start / tool_use / text / step_finish / error
@@ -180,9 +182,9 @@ Real token counts and cost are printed after every run and appended to the run l
 | Limitation | Detail |
 |-----------|--------|
 | No `--max-turns` | Timeout is the only runaway control |
-| `--auto` | All tools auto-approved (safe with post-run review) |
+| `--auto` / `--dangerously-skip-permissions` (v1 ≤1.15) | All tools auto-approved (safe with post-run review); flag auto-detected |
 | Free model delays | May have queue during peak usage |
-| No `--dir` flag | Script `cd`s into workdir instead |
+| No `--dir` flag in v2 | Script `cd`s into workdir (v1 also gets `--dir`) |
 | Needs GNU `timeout` | Not in macOS by default — `brew install coreutils` |
 
 ---

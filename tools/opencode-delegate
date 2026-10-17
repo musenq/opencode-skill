@@ -8,7 +8,8 @@
 #
 # LIMITS:
 #   - No --max-turns:  timeout is the only runaway-control lever (like gemini)
-#   - Requires --auto: all tools are auto-approved
+#   - Permissions auto-approved: --auto or --dangerously-skip-permissions (older v1),
+#     detected from `opencode run --help`
 #   - Requires GNU `timeout` (macOS: brew install coreutils)
 #   - Free models may have queue/rate-limit delays
 #
@@ -35,6 +36,21 @@ if [ ! -d "$WORKDIR" ]; then
 fi
 
 cd "$WORKDIR" || exit 1
+
+# Detect run flags from `opencode run --help` — they changed within v1, not at v2:
+#   <=1.15: --dangerously-skip-permissions, --dir   1.19: --auto, --dir   2.x: --auto only
+OC_VERSION=$(opencode --version 2>/dev/null | head -1)
+OC_HELP=$(opencode run --help 2>&1)
+OC_FLAGS=()
+if printf '%s' "$OC_HELP" | grep -q -- '--dangerously-skip-permissions'; then
+  OC_FLAGS+=(--dangerously-skip-permissions)
+else
+  OC_FLAGS+=(--auto)
+fi
+if printf '%s' "$OC_HELP" | grep -q -- '--dir'; then
+  OC_FLAGS+=(--dir "$WORKDIR")
+fi
+
 START_NS=$(date +%s%N)
 PROMPT_WORDS=$(printf '%s' "$PROMPT" | wc -w | tr -d ' ')
 GIT_BEFORE=$(git rev-parse HEAD 2>/dev/null || echo "no-git")
@@ -43,6 +59,7 @@ SENTINEL=$(mktemp /tmp/opencode-sentinel-XXXXXX)
 echo "=== OPENCODE START ==="
 echo "Workdir : $WORKDIR"
 echo "Model   : $MODEL"
+echo "CLI     : ${OC_VERSION:-unknown} (${OC_FLAGS[*]})"
 echo "Timeout : ${TIMEOUT_SECS}s"
 echo "Prompt  : ${PROMPT:0:120}..."
 echo "======================"
@@ -66,7 +83,7 @@ PROMPT_CONTENT=$(cat "$PROMPT_FILE")
 export OPENCODE_RUN_MODE="opencode-delegate"
 timeout "$TIMEOUT_SECS" opencode run "$PROMPT_CONTENT" \
   --format json \
-  --auto \
+  "${OC_FLAGS[@]}" \
   --model "$MODEL" \
   2>&1 | python3 -c "
 import sys, json, os

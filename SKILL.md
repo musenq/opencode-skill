@@ -70,11 +70,11 @@ Hard constraints — not config options.
 ### 1. No `--max-turns` flag
 **Timeout is the only runaway-control lever.** Set timeouts conservatively and decompose tasks.
 
-### 2. `--auto`
-Passed automatically by the delegate script — all tool calls auto-approved. Review the git diff afterwards.
+### 2. Auto-approved permissions (flags auto-detected)
+The delegate script reads `opencode run --help` and passes `--dangerously-skip-permissions` (v1 ≤1.15) or `--auto` (v1.19+, v2), plus `--dir <workdir>` when supported (v1 only) — all tool calls auto-approved. Review the git diff afterwards. The header's `CLI     :` line shows the detected version and flags. The free tier needs OpenCode ≥1.18.0.
 
-### 3. No `--dir` flag
-The delegate script `cd`s into the workdir; OpenCode uses the current directory. Requires GNU `timeout` (macOS: `brew install coreutils`).
+### 3. Workdir and `timeout`
+The delegate script `cd`s into the workdir (v2 has no `--dir`). Requires GNU `timeout` (macOS: `brew install coreutils`).
 
 ### 4. No pseudo-TTY needed
 Plain pipe — no `script -q -c` wrapper required.
@@ -229,6 +229,7 @@ The script prints live:
 === OPENCODE START ===
 Workdir : /path/to/project
 Model   : opencode/glm-5.3-flash-free
+CLI     : opencode v2.0.32 (--auto)
 Timeout : 300s
 Prompt  : Stack: Python/Flask. File: app.py ...
 ======================
