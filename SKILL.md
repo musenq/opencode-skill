@@ -236,7 +236,7 @@ Prompt  : Stack: Python/Flask. File: app.py ...
   [edit]   app.py  (+2/-1)
   [opencode] Done. Converted date to datetime.date in fetch_data().
 Tool calls: 3
-OpenCode tokens: 4,800  (4,600 in + 200 out)  |  ~$0.000000
+OpenCode tokens: 4,800  (4,600 in + 200 out)  |  ~$X.XXXXXX
 === OPENCODE DONE (exit: 0) ===
 === SYNTAX OK (1 file(s) checked) ===
 
@@ -361,8 +361,7 @@ The shared `~/tools/delegate-report` script can query all runs across delegates.
 cat ~/.local/share/delegate-runs.jsonl | python3 -m json.tool | less
 
 # Total cost
-jq -r '.cost_usd' ~/.local/share/delegate-runs.jsonl \
-  | awk '{sum+=$1} END {printf "Total: $%.4f\n", sum}'
+jq -rs '"Total: $" + (map(.cost_usd // 0) | add | tostring)' ~/.local/share/delegate-runs.jsonl
 ```
 
 ---
