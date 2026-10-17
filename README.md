@@ -27,6 +27,7 @@ When you type `/opencode <instruction>` in Claude Code, this skill:
 - [OpenCode CLI](https://opencode.ai) installed (`opencode --version`)
 - [Claude Code](https://claude.ai/code) with skills enabled
 - `python3` available (for the streaming parser and syntax checks)
+- GNU `timeout` available — on macOS: `brew install coreutils`
 - A git repository to work in
 
 ---
@@ -136,7 +137,7 @@ Claude Code
             └─ ~/tools/opencode-delegate <workdir> <prompt> [timeout] [model]
                  ├─ writes prompt to temp file (avoids shell injection)
                  ├─ runs: opencode run <prompt> --format json
-                 │   --dangerously-skip-permissions --model <model> --dir <workdir>
+                 │   --auto --model <model>  (run from inside <workdir>)
                  │   └─ no pseudo-TTY needed (unlike Vibe)
                  ├─ pipes JSON events through Python parser
                  │   └─ handles: step_start / tool_use / text / step_finish / error
@@ -167,7 +168,7 @@ OpenCode's internal tool calls consume **OpenCode tokens**, not Claude tokens.
 Claude only receives the compressed final output (~200-800 tokens/run).
 
 **Pricing depends on the model used:**
-- `opencode/deepseek-v4-flash-free` — **free**, no API key needed (may have queue delays)
+- `opencode/deepseek-v4.1-flash-free` — **free**, no API key needed (may have queue delays)
 - `google/gemini-2.5-flash` — requires `GOOGLE_GENERATIVE_AI_API_KEY` env var
 
 Real token counts and cost are printed after every run and appended to the run log.
@@ -179,9 +180,10 @@ Real token counts and cost are printed after every run and appended to the run l
 | Limitation | Detail |
 |-----------|--------|
 | No `--max-turns` | Timeout is the only runaway control |
-| `--dangerously-skip-permissions` | All tools auto-approved (safe with post-run review) |
+| `--auto` | All tools auto-approved (safe with post-run review) |
 | Free model delays | May have queue during peak usage |
-| No `--workdir` flag | Script `cd`s into workdir instead |
+| No `--dir` flag | Script `cd`s into workdir instead |
+| Needs GNU `timeout` | Not in macOS by default — `brew install coreutils` |
 
 ---
 

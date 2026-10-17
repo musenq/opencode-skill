@@ -70,17 +70,17 @@ Hard constraints — not config options.
 ### 1. No `--max-turns` flag
 **Timeout is the only runaway-control lever.** Set timeouts conservatively and decompose tasks.
 
-### 2. `--dangerously-skip-permissions`
+### 2. `--auto`
 Passed automatically by the delegate script — all tool calls auto-approved. Review the git diff afterwards.
 
-### 3. `--dir` flag
-Passed automatically by the delegate script. Sets the working directory for OpenCode.
+### 3. No `--dir` flag
+The delegate script `cd`s into the workdir; OpenCode uses the current directory. Requires GNU `timeout` (macOS: `brew install coreutils`).
 
 ### 4. No pseudo-TTY needed
 Plain pipe — no `script -q -c` wrapper required.
 
 ### 5. Free model queue delays
-`opencode/deepseek-v4-flash-free` — no API key cost; may queue during peak usage.
+`opencode/deepseek-v4.1-flash-free` — no API key cost; may queue during peak usage.
 
 ### 6. Orchestration chain — 5 failure points
 
@@ -199,7 +199,7 @@ VERIFY: grep for "datetime.date" in app.py and confirm it exists.
 | `workdir`      | —       | Absolute path, must exist |
 | `prompt`       | —       | Self-contained task description |
 | `timeout-secs` | `300`   | Wall-clock kill timer |
-| `model`        | `opencode/deepseek-v4-flash-free` | OpenCode model string |
+| `model`        | `opencode/deepseek-v4.1-flash-free` | OpenCode model string |
 
 **Recommended timeouts:**
 - Explore only: `120`
@@ -207,7 +207,7 @@ VERIFY: grep for "datetime.date" in app.py and confirm it exists.
 - Medium change (2–3 files): `300`
 
 **Model selection:**
-- `opencode/deepseek-v4-flash-free` (default) — free, no API key needed, may have queue delays
+- `opencode/deepseek-v4.1-flash-free` (default) — free, no API key needed, may have queue delays
 - `google/gemini-2.5-flash` — cheap, fast (requires `GOOGLE_GENERATIVE_AI_API_KEY`)
 
 **Examples:**
@@ -228,7 +228,7 @@ The script prints live:
 ```
 === OPENCODE START ===
 Workdir : /path/to/project
-Model   : opencode/deepseek-v4-flash-free
+Model   : opencode/deepseek-v4.1-flash-free
 Timeout : 300s
 Prompt  : Stack: Python/Flask. File: app.py ...
 ======================
