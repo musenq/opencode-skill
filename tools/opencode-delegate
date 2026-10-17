@@ -21,7 +21,7 @@
 WORKDIR="${1:?Usage: opencode-delegate <workdir> <prompt> [timeout-secs] [model]}"
 PROMPT="${2:?Prompt required}"
 TIMEOUT_SECS="${3:-300}"
-MODEL="${4:-opencode/deepseek-v4.1-flash-free}"
+MODEL="${4:-opencode/glm-5.3-flash-free}"
 
 # Model override: /opencode-model-pick writes model string to this flag file.
 OPENCODE_MODEL_FLAG="$HOME/.local/share/opencode-model.flag"
@@ -88,6 +88,7 @@ for raw in sys.stdin:
     try:
         ev = json.loads(line)
     except json.JSONDecodeError:
+        print(f'  [raw]    {line[:200]}', flush=True)
         continue
 
     t = ev.get('type', '')
@@ -110,10 +111,10 @@ for raw in sys.stdin:
         tool_calls += 1
 
         if tool == 'read':
-            path = inp.get('filePath', '')
+            path = inp.get('filePath') or inp.get('path', '')
             print(f'  [read]   {path or tool}', flush=True)
         elif tool == 'edit':
-            path = inp.get('filePath', '')
+            path = inp.get('filePath') or inp.get('path', '')
             meta = state.get('metadata', {}) if isinstance(state, dict) else {}
             filediff = meta.get('filediff', {}) if isinstance(meta, dict) else {}
             additions = filediff.get('additions', 0) if isinstance(filediff, dict) else 0
@@ -121,7 +122,7 @@ for raw in sys.stdin:
             diff_str = f'(+{additions}/-{deletions})' if additions or deletions else ''
             print(f'  [edit]   {path}  {diff_str}', flush=True)
         elif tool == 'write':
-            path = inp.get('filePath', '')
+            path = inp.get('filePath') or inp.get('path', '')
             print(f'  [write]  {path or tool}', flush=True)
         elif tool in ('grep', 'search'):
             pattern = inp.get('pattern', '') or inp.get('query', '')
@@ -155,7 +156,11 @@ for raw in sys.stdin:
         step_tokens = part.get('tokens', {}) if isinstance(part, dict) else {}
         step_cost = part.get('cost', 0)
         if isinstance(step_tokens, dict):
-            tokens_total += step_tokens.get('total', 0) or 0
+            total = step_tokens.get('total', 0) or 0
+            if total:
+                tokens_total += total
+            else:
+                tokens_total += (step_tokens.get('input', 0) or 0) + (step_tokens.get('output', 0) or 0) + (step_tokens.get('reasoning', 0) or 0)
             tokens_in += step_tokens.get('input', 0) or 0
             tokens_out += step_tokens.get('output', 0) or 0
             tokens_reasoning += step_tokens.get('reasoning', 0) or 0
@@ -168,11 +173,17 @@ for raw in sys.stdin:
     elif t == 'error':
         err = ev.get('error', {})
         msg = ''
+        etype = ''
         if isinstance(err, dict):
-            data = err.get('data', {}) or {}
-            msg = data.get('message', '') if isinstance(data, dict) else str(err)
+            etype = err.get('type', '') or ''
+            msg = err.get('message', '') or ''
+            if not msg:
+                data = err.get('data', {}) or {}
+                msg = data.get('message', '') if isinstance(data, dict) else str(err)
         if not msg:
             msg = str(err)
+        if etype:
+            msg = f'{etype}: {msg}'
         print(f'  [ERROR]  {msg[:200]}', flush=True)
 
 print(f'Tool calls: {tool_calls}')

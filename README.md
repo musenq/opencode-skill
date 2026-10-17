@@ -168,7 +168,7 @@ OpenCode's internal tool calls consume **OpenCode tokens**, not Claude tokens.
 Claude only receives the compressed final output (~200-800 tokens/run).
 
 **Pricing depends on the model used:**
-- `opencode/deepseek-v4.1-flash-free` — **free**, no API key needed (may have queue delays)
+- `opencode/glm-5.3-flash-free` — **free**, no API key needed (may have queue delays)
 - `google/gemini-2.5-flash` — requires `GOOGLE_GENERATIVE_AI_API_KEY` env var
 
 Real token counts and cost are printed after every run and appended to the run log.
